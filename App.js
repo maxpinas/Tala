@@ -3,129 +3,18 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, Sta
 import { Feather } from '@expo/vector-icons';
 
 // --- THEMA ---
-const theme = {
-  bg: '#0B1120',
-  surface: '#1E293B',
-  surfaceHighlight: '#334155',
-  text: '#F1F5F9',
-  textDim: '#94A3B8',
-  textHighContrast: '#FFFFFF',
-  primary: '#06B6D4', 
-  accent: '#F43F5E',
-  success: '#10B981',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-  partnerBg: '#0F172A',
-  partnerText: '#E0F2FE',
-  emergencyBg: '#450A0A',
-  emergencyCard: '#7F1D1D',
-  catPeople: '#EAB308',
-  catAction: '#22C55E',
-  catThing: '#3B82F6',
-  catPlace: '#F97316',
-};
+import { theme } from './src/theme';
 
 // --- DATA ---
-const WORD_CATEGORIES = {
-  WIE:  ["Ik", "Jij", "Wij", "Zij", "De dokter", "Iemand", "Bezoek"],
-  DOE:  ["Wil", "Ga", "Heb", "Ben", "Moet", "Kan", "Vind", "Zie"],
-  WAT:  ["Koffie", "Water", "Eten", "Pijn", "Hulp", "Rust", "Huis", "Auto"],
-  WAAR: ["Hier", "Daar", "Thuis", "Buiten", "Boven", "Nu", "Straks", "Morgen"]
-};
+import { WORD_CATEGORIES, INITIAL_CATEGORIES, DEFAULT_CONTEXTS, DEFAULT_QUICK, EXTENDED_SECTIONS } from './src/data';
 
-const INITIAL_CATEGORIES = {
-  Persoonlijk: { icon: 'user', items: [] }, 
-  Sociaal: { icon: 'smile', items: ["Hoe is het?", "Leuk je te zien"] },
-  Werk: { icon: 'briefcase', items: ["Ik zit in een meeting", "Even overleggen"] },
-  Thuis: { icon: 'home', items: ["Ik heb honger", "Ik ga slapen"] },
-  Medisch: { icon: 'activity', items: ["Ik heb pijn", "Medicatie tijd"] },
-};
+// --- SERVICES ---
+import { getAISuggestions, getAIFullSentences } from './src/services';
 
-const DEFAULT_CONTEXTS = [
-  { id: 'thuis', label: 'Thuis', icon: 'home' },
-  { id: 'dokter', label: 'Dokter', icon: 'activity' },
-  { id: 'winkel', label: 'Winkel', icon: 'shopping-cart' },
-];
+// --- COMMON COMPONENTS ---
+import { CustomPopup, SimpleInputModal, EditToolbar, OutputBar, SelectorModal } from './src/components/common';
 
-const DEFAULT_QUICK = ["Ja", "Nee", "Moment", "Misschien"];
-
-const EXTENDED_SECTIONS = [
-  { id: 'intro', title: 'Introductie' },
-  { id: 'personal', title: '1. Persoonlijk' },
-  { id: 'family', title: '2. Familie' },
-  { id: 'medical', title: '3. Medisch' },
-  { id: 'daily', title: '4. Dagelijks' },
-  { id: 'emergency', title: '9. Nood' },
-];
-
-// --- AI LOGICA ---
-const getAISuggestions = (currentSentence) => {
-  const lastWord = currentSentence[currentSentence.length - 1]?.toLowerCase();
-  if (!lastWord) return ["Ik", "Mag ik", "Hoe gaat", "Waar is"];
-  switch (lastWord) {
-    case 'ik': return ["wil", "ben", "heb", "ga"];
-    case 'jij': return ["bent", "moet", "kunt", "wilt"];
-    case 'wil': return ["graag", "niet", "even", "naar huis"];
-    case 'heb': return ["pijn", "honger", "dorst", "het koud"];
-    default: return ["graag", "niet", "nu", "even"];
-  }
-};
-
-const getAIFullSentences = (sentenceArray) => {
-  const base = sentenceArray.join(' ');
-  if (!base) return ["Ik wil graag koffie.", "Ik heb hulp nodig.", "Hoe gaat het?"];
-  if (base.includes("pijn")) return [base + " in mijn hoofd.", base + ", bel de dokter.", base + ", ik wil liggen."];
-  if (base.includes("wil")) return [base + " naar huis.", base + " wat eten.", base + " even rusten."];
-  return [base + " alstublieft.", base + " en bedankt.", base + ", snap je?"];
-};
-
-// --- COMPONENTS ---
-
-const CustomPopup = ({ visible, title, message, onClose, type = 'info' }) => (
-  <Modal visible={visible} transparent animationType="fade">
-    <View style={styles.modalOverlay}>
-      <View style={[styles.popupCard, type === 'danger' && {borderColor: theme.danger}]}>
-        <View style={{alignItems: 'center', marginBottom: 15}}>
-           <View style={[styles.popupIcon, {backgroundColor: type === 'danger' ? theme.danger : theme.primary}]}>
-             <Feather name={type === 'danger' ? "alert-circle" : type === 'copy' ? "copy" : "volume-2"} size={32} color="#FFF" />
-           </View>
-        </View>
-        <Text style={styles.popupTitle}>{title}</Text>
-        <Text style={styles.popupMessage}>{message}</Text>
-        <TouchableOpacity style={styles.popupBtn} onPress={onClose}>
-          <Text style={styles.popupBtnText}>Sluiten</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  </Modal>
-);
-
-const SimpleInputModal = ({ visible, title, placeholder, onSave, onClose }) => {
-    const [val, setVal] = useState("");
-    return (
-        <Modal visible={visible} transparent animationType="slide">
-            <View style={styles.modalOverlay}>
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.selectorContainer}>
-                    <View style={styles.selectorHeader}>
-                        <Text style={styles.selectorTitle}>{title}</Text>
-                        <TouchableOpacity onPress={onClose}><Feather name="x" size={24} color="#FFF"/></TouchableOpacity>
-                    </View>
-                    <TextInput 
-                        style={styles.inputField} 
-                        placeholder={placeholder} 
-                        placeholderTextColor={theme.textDim}
-                        value={val}
-                        onChangeText={setVal}
-                        autoFocus
-                    />
-                    <TouchableOpacity style={styles.saveBtn} onPress={() => { if(val.trim()){ onSave(val.trim()); setVal(""); onClose(); } }}>
-                        <Text style={styles.saveBtnText}>Toevoegen</Text>
-                    </TouchableOpacity>
-                </KeyboardAvoidingView>
-            </View>
-        </Modal>
-    );
-};
+// --- COMPONENTS (overige, nog niet geëxtraheerd) ---
 
 // Generic List Manager for Locations, Partners, Quick Responses
 const ListManagerScreen = ({ title, items, onUpdate, onClose, type = 'object' }) => {
@@ -217,18 +106,6 @@ const ListManagerScreen = ({ title, items, onUpdate, onClose, type = 'object' })
         </Modal>
     );
 };
-
-const EditToolbar = ({ word, onMoveLeft, onMoveRight, onDelete, onDeselect }) => (
-  <View style={styles.editToolbar}>
-    <View style={styles.editInfo}><Text style={styles.editLabel}>Geselecteerd: </Text><Text style={styles.editWord}>"{word}"</Text></View>
-    <View style={styles.editActions}>
-       <TouchableOpacity style={styles.editBtn} onPress={onMoveLeft}><Feather name="arrow-left" size={24} color="#FFF" /></TouchableOpacity>
-       <TouchableOpacity style={styles.editBtn} onPress={onMoveRight}><Feather name="arrow-right" size={24} color="#FFF" /></TouchableOpacity>
-       <TouchableOpacity style={[styles.editBtn, {backgroundColor: theme.danger}]} onPress={onDelete}><Feather name="trash-2" size={20} color="#FFF" /></TouchableOpacity>
-       <TouchableOpacity style={[styles.editBtn, {backgroundColor: theme.surfaceHighlight}]} onPress={onDeselect}><Feather name="check" size={20} color={theme.success} /></TouchableOpacity>
-    </View>
-  </View>
-);
 
 const ListEditor = ({ items, onItemAdd, onItemRemove, placeholder, title }) => {
   const [text, setText] = useState("");
@@ -694,26 +571,6 @@ const HistoryView = ({ history, onBack, onSelect }) => (
 
 const FullScreenShow = ({ text, onClose }) => (
   <Modal animationType="fade" visible={true}><View style={styles.fullScreenContainer}><TouchableOpacity style={styles.fullScreenClose} onPress={onClose}><Feather name="x" size={32} color="#FFF" /><Text style={{color:'#FFF', marginTop:4}}>Sluiten</Text></TouchableOpacity><View style={styles.fullScreenContent}><Text style={styles.fullScreenText}>{text}</Text></View></View></Modal>
-);
-
-const SelectorModal = ({ visible, title, options, selectedId, onSelect, onClose, onAdd }) => (
-  <Modal visible={visible} transparent animationType="slide"><View style={styles.modalOverlay}><View style={styles.selectorContainer}><View style={styles.selectorHeader}><Text style={styles.selectorTitle}>{title}</Text><TouchableOpacity onPress={onClose}><Feather name="x" size={24} color={theme.text} /></TouchableOpacity></View>
-  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      {options.map(opt => (<TouchableOpacity key={opt.id} style={[styles.selectorItem, selectedId === opt.id && styles.selectorItemActive]} onPress={() => { onSelect(opt.id); onClose(); }}><View style={[styles.selectorIcon, selectedId === opt.id && {backgroundColor: theme.primary}]}><Feather name={opt.icon} size={24} color={selectedId === opt.id ? '#000' : theme.text} /></View><Text style={styles.selectorLabel}>{opt.label}</Text></TouchableOpacity>))}
-      {onAdd && (
-          <TouchableOpacity style={styles.selectorItem} onPress={onAdd}>
-              <View style={[styles.selectorIcon, {backgroundColor: theme.surfaceHighlight, borderWidth:1, borderColor: theme.primary}]}>
-                  <Feather name="plus" size={24} color={theme.primary} />
-              </View>
-              <Text style={styles.selectorLabel}>Toevoegen</Text>
-          </TouchableOpacity>
-      )}
-  </ScrollView>
-  </View></View></Modal>
-);
-
-const OutputBar = ({ onSpeak, onCopy, onShow, onClear }) => (
-  <View style={styles.outputBar}><TouchableOpacity style={styles.outputBtnDestructive} onPress={onClear}><Feather name="trash-2" size={24} color={theme.textDim} /></TouchableOpacity><View style={styles.outputActions}><TouchableOpacity style={[styles.outputBtn, {backgroundColor: theme.primary}]} onPress={onSpeak}><Feather name="volume-2" size={24} color="#000" /><Text style={styles.outputBtnTextDark}>Spreek</Text></TouchableOpacity><TouchableOpacity style={[styles.outputBtn, {backgroundColor: theme.surfaceHighlight}]} onPress={onCopy}><Feather name="copy" size={24} color="#FFF" /><Text style={styles.outputBtnText}>Kopieer</Text></TouchableOpacity><TouchableOpacity style={[styles.outputBtn, {backgroundColor: theme.surfaceHighlight}]} onPress={onShow}><Feather name="monitor" size={24} color="#FFF" /><Text style={styles.outputBtnText}>Toon</Text></TouchableOpacity></View></View>
 );
 
 // --- MAIN APP ---

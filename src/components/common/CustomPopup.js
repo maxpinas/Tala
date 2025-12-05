@@ -1,0 +1,74 @@
+import React from 'react';
+import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { theme } from '../../theme';
+
+const CustomPopup = ({ visible, title, message, onClose, type = 'info' }) => (
+  <Modal visible={visible} transparent animationType="fade">
+    <View style={styles.modalOverlay}>
+      <View style={[styles.popupCard, type === 'danger' && {borderColor: theme.danger}]}>
+        <View style={{alignItems: 'center', marginBottom: 15}}>
+           <View style={[styles.popupIcon, {backgroundColor: type === 'danger' ? theme.danger : theme.primary}]}>
+             <Feather name={type === 'danger' ? "alert-circle" : type === 'copy' ? "copy" : "volume-2"} size={32} color="#FFF" />
+           </View>
+        </View>
+        <Text style={styles.popupTitle}>{title}</Text>
+        <Text style={styles.popupMessage}>{message}</Text>
+        <TouchableOpacity style={styles.popupBtn} onPress={onClose}>
+          <Text style={styles.popupBtnText}>Sluiten</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+
+const styles = StyleSheet.create({
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.8)', 
+    justifyContent: 'flex-end' 
+  },
+  popupCard: { 
+    backgroundColor: theme.surface, 
+    width: '90%', 
+    alignSelf: 'center', 
+    padding: 24, 
+    borderRadius: 24, 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: theme.surfaceHighlight, 
+    marginBottom: '50%' 
+  },
+  popupTitle: { 
+    color: '#FFF', 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    marginBottom: 8, 
+    textAlign: 'center' 
+  },
+  popupMessage: { 
+    color: theme.textDim, 
+    fontSize: 18, 
+    textAlign: 'center', 
+    marginBottom: 24 
+  },
+  popupBtn: { 
+    backgroundColor: theme.surfaceHighlight, 
+    paddingVertical: 12, 
+    paddingHorizontal: 32, 
+    borderRadius: 30 
+  },
+  popupBtnText: { 
+    color: '#FFF', 
+    fontWeight: 'bold' 
+  },
+  popupIcon: { 
+    width: 64, 
+    height: 64, 
+    borderRadius: 32, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+});
+
+export default CustomPopup;
